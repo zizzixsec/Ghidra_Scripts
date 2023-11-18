@@ -137,3 +137,4 @@ TODO:
 - Remove Duplicates from .fidb files.
 - Repack for distrubtion.
 - Implement way to skip libraries that have already been imported.
+- Cleanup main script output for 7z and final fidb creation.
