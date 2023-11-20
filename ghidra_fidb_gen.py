@@ -30,6 +30,7 @@ class FIDBIMPORTER:
         self.proj_name = "lib-fidb"
 
     def get_srcs(self, path):
+        print("[*] - Downloading source files...")
         if not Path(self.file).is_file():
             die(f"File {self.file} not found")
         with open(self.file, "r") as f:
@@ -44,6 +45,7 @@ class FIDBIMPORTER:
                     copyfileobj(r, f)
 
     def extract_debs(self, path, dist):
+        print(f"[*] - Extracting {dist} files...")
         name_pattern = compile(r'^(.*)-([^-]+)-(.+)\.deb$')
         for debfile in path.iterdir():
             pkg = debfile.name.split('/')[-1]
@@ -68,24 +70,26 @@ class FIDBIMPORTER:
                         copy(str(a.absolute()), str(dest / a.name))
 
     def unpack_libs(self):
+        print("[*] - Unpacking libraries...")
         for lib in self.lib_folder.rglob("*"):
             if lib.is_file() and lib.name.endswith(".a"):
                 libpath = Path(str(lib)[:-2])
                 libpath.mkdir(parents=True, exist_ok=True)
+                # with open("/dev/null", "w") as nulloutput:
                 run(["7z", "-y", "x", lib, f"-o{str(libpath)}"])
 
-        for obj in (self.lib_folder / self.distro).rglob(f"*"):
-            if obj.is_file():
-                if obj.name.endswith(".txt"):
-                    with open(self.common_log, "w") as outfile:
+        with open(self.common_log, "w") as outfile:
+            for obj in (self.lib_folder / self.distro).rglob(f"*"):
+                if obj.is_file():
+                    if obj.name.endswith(".txt"):
                         with open(obj, "r") as infile:
                             for inline in set(infile.readlines()):
                                 outfile.write(f"{inline.split()[1]}\n")
 
-                if not obj.name.endswith(".o") and not obj.name.endswith(".obj"):
-                    obj.unlink(missing_ok=True)
-            elif obj.is_symlink():
-                obj.unlink(missing_ok=True)
+                    if not obj.name.endswith(".o") and not obj.name.endswith(".obj"):
+                        obj.unlink(missing_ok=True)
+                    elif obj.is_symlink():
+                        obj.unlink(missing_ok=True)
 
     def ghidra_import(self):
         print("[*] - Running Ghidra Headless Analyzer...")
@@ -98,6 +102,7 @@ class FIDBIMPORTER:
                         "FunctionIDHeadlessPostscript.java"], stdout=outfile, stderr=outfile)
 
     def generate_langids(self):
+        print("[*] - Generating Language IDs...")
         with open(self.langids_log, "w") as outfile:
             with open(self.headless_log, "r") as infile:
                 for line in set(infile.readlines()):
@@ -105,10 +110,11 @@ class FIDBIMPORTER:
                         outfile.write(f"{line.split()[3]}\n")
 
     def generate_fidb(self):
+        print("[*] - Generating FIDBs...")
         self.duplicate_log.touch(exist_ok=True)
 
         with open(self.langids_log, "r") as log:
-            for langid in set(log):
+            for langid in set(log.readlines()):
                 langid_dots = langid.replace(':','.')
                 run([self.ghidra_headless, self.ghidra_proj, self.proj_name, "-noanalysis", \
                     "-scriptPath", "ghidra_scripts", "-preScript", "AutoCreateMultipleLibraries.java", \
