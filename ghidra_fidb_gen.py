@@ -98,7 +98,7 @@ class FIDBIMPORTER:
         with open(self.headless_log, "w") as outfile:
             run([self.ghidra_headless, self.ghidra_proj, self.proj_name, "-import", self.lib_folder, \
                 "-recursive", "-scriptPath", "ghidra_scripts", "-preScript", \
-                    "FunctionIDHeadlessPrescript.java", "-postScript", \
+                    "FunctionIDHeadlessPrescriptMinimal.java", "-postScript", \
                         "FunctionIDHeadlessPostscript.java"], stdout=outfile, stderr=outfile)
 
     def generate_langids(self):
