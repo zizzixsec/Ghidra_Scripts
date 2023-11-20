@@ -75,7 +75,6 @@ class FIDBIMPORTER:
             if lib.is_file() and lib.name.endswith(".a"):
                 libpath = Path(str(lib)[:-2])
                 libpath.mkdir(parents=True, exist_ok=True)
-                # with open("/dev/null", "w") as nulloutput:
                 run(["7z", "-y", "x", lib, f"-o{str(libpath)}"])
 
         with open(self.common_log, "w") as outfile:
@@ -99,15 +98,17 @@ class FIDBIMPORTER:
             run([self.ghidra_headless, self.ghidra_proj, self.proj_name, "-import", self.lib_folder, \
                 "-recursive", "-scriptPath", "ghidra_scripts", "-preScript", \
                     "FunctionIDHeadlessPrescriptMinimal.java", "-postScript", \
-                        "FunctionIDHeadlessPostscript.java"], stdout=outfile, stderr=outfile)
+                        "FunctionIDHeadlessPostscript.java"], stdout=outfile)
 
     def generate_langids(self):
         print("[*] - Generating Language IDs...")
+        langid_pattern = compile(r'\b(\w+:\w+:\w+:\w+:\w+)\b')
         with open(self.langids_log, "w") as outfile:
             with open(self.headless_log, "r") as infile:
                 for line in set(infile.readlines()):
-                    if "Language/Compiler:" in line:
-                        outfile.write(f"{line.split()[3]}\n")
+                    m = langid_pattern.search(line)
+                    if m.group(1):
+                        outfile.write(f"{m.group(1)}\n")
 
     def generate_fidb(self):
         print("[*] - Generating FIDBs...")
