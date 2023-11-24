@@ -56,9 +56,3 @@ http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-p
 http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-ppc64el-cross_2.37-0ubuntu2cross1_all.deb
 http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-ppc64el-cross_2.38-1ubuntu4cross1_all.deb
 http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-ppc64el-cross_2.38-3ubuntu1cross1_all.deb
-http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-s390x-cross_2.31-0ubuntu7cross1_all.deb
-http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-s390x-cross_2.31-0ubuntu9.9cross1_all.deb
-http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-s390x-cross_2.35-0ubuntu1cross3_all.deb
-http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-s390x-cross_2.37-0ubuntu2cross1_all.deb
-http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-s390x-cross_2.38-1ubuntu4cross1_all.deb
-http://us.archive.ubuntu.com/ubuntu/pool/main/c/cross-toolchain-base/libc6-dev-s390x-cross_2.38-3ubuntu1cross1_all.deb

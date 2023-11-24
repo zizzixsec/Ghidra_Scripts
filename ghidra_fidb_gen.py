@@ -27,6 +27,7 @@ class FIDBIMPORTER:
         self.headless_log = self.log_folder / f"{self.distro}-headless.log"
         self.langids_log = self.log_folder / f"{self.distro}-langids.txt"
         self.duplicate_log = self.log_folder / "duplicate_results.txt"
+        self.zip_log = self.log_folder / "7z.log"
         self.proj_name = "lib-fidb"
 
     def get_srcs(self, path):
@@ -71,24 +72,32 @@ class FIDBIMPORTER:
 
     def unpack_libs(self):
         print("[*] - Unpacking libraries...")
-        for lib in self.lib_folder.rglob("*"):
-            if lib.is_file() and lib.name.endswith(".a"):
-                libpath = Path(str(lib)[:-2])
-                libpath.mkdir(parents=True, exist_ok=True)
-                run(["7z", "-y", "x", lib, f"-o{str(libpath)}"])
+
+        with open(self.zip_log, "w") as outfile:
+            for lib in self.lib_folder.rglob("*"):
+                if lib.is_file() and lib.name.endswith(".a"):
+                    libpath = Path(str(lib)[:-2])
+                    libpath.mkdir(parents=True, exist_ok=True)
+                    run(["7z", "-y", "x", lib, f"-o{str(libpath)}"], stdout=outfile, stderr=outfile)
+
+        tmpData = []
+        
+        for obj in (self.lib_folder / self.distro).rglob(f"*"):
+            if obj.is_file():
+                if obj.name.endswith(".txt"):
+                    with open(obj, "r") as infile:
+                        for line in infile.readlines():
+                            tmpData.append(line.split()[1].rstrip())
+
+                if not obj.name.endswith(".o") and not obj.name.endswith(".obj"):
+                        obj.unlink(missing_ok=True)
+                elif obj.is_symlink():
+                    obj.unlink(missing_ok=True)
 
         with open(self.common_log, "w") as outfile:
-            for obj in (self.lib_folder / self.distro).rglob(f"*"):
-                if obj.is_file():
-                    if obj.name.endswith(".txt"):
-                        with open(obj, "r") as infile:
-                            for inline in set(infile.readlines()):
-                                outfile.write(f"{inline.split()[1]}\n")
+            for item in set(tmpData):  
+                outfile.write(f"{item}\n")
 
-                    if not obj.name.endswith(".o") and not obj.name.endswith(".obj"):
-                        obj.unlink(missing_ok=True)
-                    elif obj.is_symlink():
-                        obj.unlink(missing_ok=True)
 
     def ghidra_import(self):
         print("[*] - Running Ghidra Headless Analyzer...")
@@ -98,17 +107,22 @@ class FIDBIMPORTER:
             run([self.ghidra_headless, self.ghidra_proj, self.proj_name, "-import", self.lib_folder, \
                 "-recursive", "-scriptPath", "ghidra_scripts", "-preScript", \
                     "FunctionIDHeadlessPrescriptMinimal.java", "-postScript", \
-                        "FunctionIDHeadlessPostscript.java"], stdout=outfile)
+                        "FunctionIDHeadlessPostscript.java"], stdout=outfile, stderr=outfile)
 
     def generate_langids(self):
         print("[*] - Generating Language IDs...")
         langid_pattern = compile(r'\b(\w+:\w+:\w+:\w+:\w+)\b')
+
+        tmpData = []
+        with open(self.headless_log, "r") as infile:
+            for line in infile.readlines():
+                m = langid_pattern.search(line)
+                if m:
+                    tmpData.append(m.group(1).rstrip())
+        
         with open(self.langids_log, "w") as outfile:
-            with open(self.headless_log, "r") as infile:
-                for line in set(infile.readlines()):
-                    m = langid_pattern.search(line)
-                    if m.group(1):
-                        outfile.write(f"{m.group(1)}\n")
+            for item in set(tmpData):
+                outfile.write(f"{item}\n")
 
     def generate_fidb(self):
         print("[*] - Generating FIDBs...")
@@ -138,7 +152,7 @@ class FIDBIMPORTER:
         self.unpack_libs()
         self.ghidra_import()
         self.generate_langids()
-        self.generate_fidb()
+        # self.generate_fidb()
 
 
 def get_args():
