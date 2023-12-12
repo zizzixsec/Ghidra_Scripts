@@ -126,15 +126,21 @@ class FIDBIMPORTER:
 
     def generate_fidb(self):
         print("[*] - Generating FIDBs...")
-        self.duplicate_log.touch(exist_ok=True)
+        print(f"[i] - Run `tail -f {self.headless_log}` for status...")
+        
+        if self.duplicate_log.is_file():
+            self.duplicate_log.unlink()
+        self.duplicate_log.touch()
 
-        with open(self.langids_log, "r") as log:
-            for langid in set(log.readlines()):
-                langid_dots = langid.replace(':','.')
-                run([self.ghidra_headless, self.ghidra_proj, self.proj_name, "-noanalysis", \
-                    "-scriptPath", "ghidra_scripts", "-preScript", "AutoCreateMultipleLibraries.java", \
-                        self.duplicate_log, "true", "fidb", f"{self.distro}-{langid_dots}.fidb", \
-                            f"{self.lib_folder}/{self.distro}", f"log/{self.distro}-common.txt", langid])
+        with open(self.headless_log, "a") as outfile:
+            with open(self.langids_log, "r") as log:
+                for langid in log.readlines():
+                    langid_dots = langid.replace(':','.')
+                    run([self.ghidra_headless, self.ghidra_proj, self.proj_name, "-noanalysis", \
+                        "-scriptPath", "ghidra_scripts", "-preScript", "AutoCreateMultipleLibraries.java", \
+                            self.duplicate_log, "true", "fidb", f"{self.distro}-{langid_dots}.fidb", \
+                                f"{self.lib_folder}/{self.distro}", f"{self.log_folder}/{self.distro}-common.txt", langid], \
+                                    stdout=outfile, stderr=outfile)
 
     def importer(self):
         self.lib_folder.mkdir(parents=True, exist_ok=True)
@@ -152,7 +158,7 @@ class FIDBIMPORTER:
         self.unpack_libs()
         self.ghidra_import()
         self.generate_langids()
-        # self.generate_fidb()
+        self.generate_fidb()
 
 
 def get_args():
